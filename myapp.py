@@ -1,6 +1,6 @@
 import streamlit as st
 
-# 1. إعداد الصفحة والستايل الاحترافي
+# 1. إعداد الصفحة والستايل والاسم المعتمد
 st.set_page_config(page_title="MY ACADEMIC TRACKER", layout="wide")
 
 st.markdown("""
@@ -26,31 +26,30 @@ st.markdown("""
     """, unsafe_allow_html=True)
 
 # ---------------------------------------------------------
-# نظام تقديرات جامعة الدلتا (Delta University Grading System)
-# بناءً على الصورة المرسلة
+# نظام تقديرات جامعة الدلتا (كلية الذكاء الاصطناعي)
 # ---------------------------------------------------------
 
 # الحد الأدنى للنسبة المئوية لكل تقدير (لتحليل الفاينال)
-DELTA_GRADING_THRESHOLDS = {
+DELTA_THRESHOLDS = {
     "A+": 0.97, "A": 0.93, "A-": 0.89,
     "B+": 0.84, "B": 0.80, "B-": 0.76,
     "C+": 0.73, "C": 0.70, "C-": 0.67,
     "D+": 0.64, "D": 0.60
 }
 
-# دالة تحويل نقاط الـ GPA لتقدير وصفي ومسج تشجيعي
+# دالة تحويل نقاط الـ GPA لتقدير وصفي (بناءً على المادة 16)
 def get_delta_feedback(gpa_val):
-    if gpa_val >= 4.0: return "A+ / A", "🔥 AI Legend Status! Outstanding Work.", "#00ffcc"
-    elif gpa_val >= 3.7: return "A-", "🌟 Brilliant! You're dominating the AI track.", "#00d4ff"
-    elif gpa_val >= 3.3: return "B+", "👍 Very Good! Keep that momentum going.", "#ccff00"
-    elif gpa_val >= 3.0: return "B", "📈 Good Effort! Success is on your horizon.", "#ffcc00"
-    elif gpa_val >= 2.7: return "B-", "✨ Solid! You have more potential to show.", "#ff9100"
-    elif gpa_val >= 2.3: return "C+", "🎯 You're on track, keep pushing for more.", "#ffcc00"
-    elif gpa_val >= 2.0: return "C", "📚 Stay focused, you can surely improve.", "#ffa500"
-    elif gpa_val >= 1.7: return "C-", "⚠️ Caution! Need to tighten your study plan.", "#ff4b4b"
-    elif gpa_val >= 1.3: return "D+", "📉 Warning! Your GPA needs urgent care.", "#ff4b4b"
-    elif gpa_val >= 1.0: return "D", "📉 Minimum Pass. Review your strategy!", "#ff4b4b"
-    else: return "F", "🚫 Keep your head up. Resilience is key to success!", "#ff0000"
+    if gpa_val >= 4.0: return "A+ / A (ممتاز)", "🔥 AI Legend Status! Outstanding Work.", "#00ffcc"
+    elif gpa_val >= 3.7: return "A- (ممتاز)", "🌟 Brilliant! You're dominating the AI track.", "#00d4ff"
+    elif gpa_val >= 3.3: return "B+ (جيد جداً)", "👍 Very Good! Keep that momentum going.", "#ccff00"
+    elif gpa_val >= 3.0: return "B (جيد جداً)", "📈 Good Effort! Success is on your horizon.", "#ffcc00"
+    elif gpa_val >= 2.7: return "B- (جيد جداً)", "✨ Solid! You have more potential to show.", "#ff9100"
+    elif gpa_val >= 2.3: return "C+ (جيد)", "🎯 You're on track, keep pushing for more.", "#ffcc00"
+    elif gpa_val >= 2.0: return "C (جيد)", "📚 Stay focused, you can surely improve.", "#ffa500"
+    elif gpa_val >= 1.7: return "C- (مقبول)", "⚠️ Caution! Need to tighten your study plan.", "#ff4b4b"
+    elif gpa_val >= 1.3: return "D+ (مقبول)", "📉 Warning! Your GPA needs urgent care.", "#ff4b4b"
+    elif gpa_val >= 1.0: return "D (مقبول)", "📉 Minimum Pass. Review your strategy!", "#ff4b4b"
+    else: return "F / FF (رسوب/حرمان)", "💪 Resilience is key to success! Try again harder.", "#ff0000"
 
 # ---------------------------------------------------------
 
@@ -83,7 +82,7 @@ with tab1:
                 })
                 st.success(f"Successfully Added: {name}")
 
-# --- الصفحة الثانية: تارجت أناليزر (حساب الفاينال) ---
+# --- الصفحة الثانية: تارجت أناليزر (حساب الفاينال بناءً على لائحة الدلتا) ---
 with tab2:
     st.subheader("Step 2: Analyze Final Exam Target")
     if not st.session_state.courses:
@@ -96,17 +95,18 @@ with tab2:
         m_got = col_in1.number_input(f"Your Midterm Score (Max {cd['m_max']})", min_value=0.0, max_value=float(cd['m_max']))
         cl_got = col_in2.number_input(f"Your Classwork Score (Max {cd['cl_max']})", min_value=0.0, max_value=float(cd['cl_max']))
         
-        target_g = st.selectbox("Your Goal Grade (Delta Scale)", list(DELTA_GRADING_THRESHOLDS.keys()))
+        target_g = st.selectbox("Your Goal Grade (Delta Scale)", list(DELTA_THRESHOLDS.keys()))
         
-        needed = (DELTA_GRADING_THRESHOLDS[target_g] * cd['total']) - (m_got + cl_got)
+        # العملية الحسابية بناءً على النسبة المئوية للتقدير المختار
+        needed = (DELTA_THRESHOLDS[target_g] * cd['total']) - (m_got + cl_got)
         
         if st.button("Analyze Target Now"):
             if needed > cd['f_m']: 
                 st.error(f"Target too high! To get {target_g} you need {needed:.1f} marks, but Final is {cd['f_m']}.")
             elif needed <= 0: 
-                st.success(f"Target already reached for {target_g}! You're safe.")
+                st.success(f"Target already reached for {target_g}! Focus on perfection in the final.")
             else: 
-                st.info(f"To get {target_g}, you need to score at least **{needed:.1f}** out of **{cd['f_m']}** in the Final.")
+                st.info(f"To get {target_g}, you need to score at least **{needed:.1f}** out of **{cd['f_m']}** in the Final Exam.")
 
 # --- الصفحة الثالثة: محول الـ GPA ---
 with tab3:
